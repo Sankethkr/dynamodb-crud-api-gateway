@@ -1,12 +1,14 @@
-import db from './db';
-import {
+const {
+  DynamoDBClient,
   GetItemCommand,
   PutItemCommand,
   DeleteItemCommand,
   ScanCommand,
   UpdateItemCommand,
-} from '@aws-sdk/client-dynamodb';
-import { marshall, unmarshall } from '@aws-sdk/util-dynamodb';
+} = require('@aws-sdk/client-dynamodb');
+const { marshall, unmarshall } = require('@aws-sdk/util-dynamodb');
+
+const client = new DynamoDBClient();
 
 const getPost = async (event) => {
   const response = { statusCode: 200 };
@@ -15,7 +17,7 @@ const getPost = async (event) => {
       TableName: process.env.DYNAMODB_TABLE_NAME,
       Key: marshall({ postId: event.pathParameters.postId }),
     };
-    const { Item } = await db.send(new GetItemCommand(params));
+    const { Item } = await client.send(new GetItemCommand(params));
     response.body = JSON.stringify({
       message: 'Successfully retrieved post.',
       data: Item ? unmarshall(Item) : {},
@@ -41,7 +43,7 @@ const createPost = async (event) => {
       TableName: process.env.DYNAMODB_TABLE_NAME,
       Item: marshall(body || {}),
     };
-    const createResult = await db.send(new PutItemCommand(params));
+    const createResult = await client.send(new PutItemCommand(params));
     response.body = JSON.stringify({
       message: 'Successfully created post.',
       createResult,
@@ -86,7 +88,7 @@ const updatePost = async (event) => {
         )
       ),
     };
-    const updateResult = await db.send(new UpdateItemCommand(params));
+    const updateResult = await client.send(new UpdateItemCommand(params));
     response.body = JSON.stringify({
       message: 'Successfully updated post.',
       updateResult,
@@ -110,7 +112,7 @@ const deletePost = async (event) => {
       TableName: process.env.DYNAMODB_TABLE_NAME,
       Key: marshall({ postId: event.pathParameters.postId }),
     };
-    const deleteResult = await db.send(new DeleteItemCommand(params));
+    const deleteResult = await client.send(new DeleteItemCommand(params));
     response.body = JSON.stringify({
       message: 'Successfully deleted post.',
       deleteResult,
@@ -130,7 +132,7 @@ const deletePost = async (event) => {
 const getAllPosts = async () => {
   const response = { statusCode: 200 };
   try {
-    const { Items } = await db.send(
+    const { Items } = await client.send(
       new ScanCommand({ TableName: process.env.DYNAMODB_TABLE_NAME })
     );
     response.body = JSON.stringify({
@@ -150,4 +152,10 @@ const getAllPosts = async () => {
   return response;
 };
 
-export { getPost, createPost, updatePost, deletePost, getAllPosts };
+module.exports = {
+  getPost,
+  createPost,
+  updatePost,
+  deletePost,
+  getAllPosts,
+};
