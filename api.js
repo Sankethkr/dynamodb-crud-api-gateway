@@ -53,7 +53,7 @@ const getEmployeeDetail = async (event) => {
   try {
     const params = {
       TableName: process.env.DYNAMODB_TABLE_NAME,
-      Key: marshall({ employeeId: event.pathParameters.employeeId }),
+      Key: marshall({ email: event.pathParameters.email }),
     };
     const { Item } = await client.send(new GetItemCommand(params));
     response.body = JSON.stringify({

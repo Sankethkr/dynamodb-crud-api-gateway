@@ -13,12 +13,12 @@ plugins:
 functions:
   getPost:
     handler: api.getEmployeeDetail
-    name: get-post
+    name: get-employeeDetail
     memorySize: 128 # mb
     timeout: 5 # seconds
     events:
       - http:
-          path: postByEmail/{email} # Use postByEmail instead of post
+          path: getByEmail/{email} # Use postByEmail instead of post
           method: GET
     iamRoleStatements:
       - Effect: "Allow"
