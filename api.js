@@ -98,31 +98,45 @@ const updatePost = async (event) => {
   try {
     const body = JSON.parse(event.body);
 
+    // Check if required fields are present for creating a post
+    if (!body.postId) {
+      throw new Error('Required fields are missing for updating a post.');
+    }
+
+    const objKeys = Object.keys(body);
+    if (objKeys.length === 0) {
+      throw new Error('No fields provided for updating the post.');
+    }
+
     // Validate the incoming data
     validatePostData(body);
 
-    const objKeys = Object.keys(body);
     const params = {
       TableName: process.env.DYNAMODB_TABLE_NAME,
       Key: marshall({ postId: event.pathParameters.postId }),
       UpdateExpression: `SET ${objKeys
+        .filter((key) => key !== 'postId') // Exclude postId from updates
         .map((_, index) => `#key${index} = :value${index}`)
         .join(', ')}`,
-      ExpressionAttributeNames: objKeys.reduce(
-        (acc, key, index) => ({
-          ...acc,
-          [`#key${index}`]: key,
-        }),
-        {}
-      ),
-      ExpressionAttributeValues: marshall(
-        objKeys.reduce(
+      ExpressionAttributeNames: objKeys
+        .filter((key) => key !== 'postId') // Exclude postId from updates
+        .reduce(
           (acc, key, index) => ({
             ...acc,
-            [`:value${index}`]: body[key],
+            [`#key${index}`]: key,
           }),
           {}
-        )
+        ),
+      ExpressionAttributeValues: marshall(
+        objKeys
+          .filter((key) => key !== 'postId') // Exclude postId from updates
+          .reduce(
+            (acc, key, index) => ({
+              ...acc,
+              [`:value${index}`]: body[key],
+            }),
+            {}
+          )
       ),
     };
     const updateResult = await client.send(new UpdateItemCommand(params));
@@ -148,6 +162,4 @@ module.exports = {
   getPost,
   createPost,
   updatePost,
-  // deletePost,
-  // getAllPosts,
 };
