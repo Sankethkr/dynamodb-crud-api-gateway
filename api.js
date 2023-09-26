@@ -10,35 +10,52 @@ const { marshall, unmarshall } = require('@aws-sdk/util-dynamodb');
 
 const client = new DynamoDBClient();
 
-const getPost = async (event) => {
-  const response = { statusCode: 200 };
-  try {
-    const params = {
-      TableName: process.env.DYNAMODB_TABLE_NAME,
-      Key: marshall({ postId: event.pathParameters.postId }),
-    };
-    const { Item } = await client.send(new GetItemCommand(params));
-    response.body = JSON.stringify({
-      message: 'Successfully retrieved post.',
-      data: Item ? unmarshall(Item) : {},
-      rawData: Item,
-    });
-  } catch (e) {
-    console.error(e);
-    response.statusCode = 500;
-    response.body = JSON.stringify({
-      message: 'Failed to get post.',
-      errorMsg: e.message,
-      errorStack: e.stack,
-    });
+// Regular expressions for validation
+const phoneNumberRegex = /^\d{10}$/; // Matches 10-digit phone numbers
+const emailRegex = /^[A-Za-z0-9+_.-]+@(.+)$/; // Matches email addresses
+const nameRegex = /^[A-Za-z\s]+$/; // Matches names (only letters and spaces)
+const addressRegex = /^[A-Za-z0-9\s]+$/; // Matches addresses (letters, numbers, and spaces)
+
+const validatePostData = (postData) => {
+  if (
+    !(
+      postData.postId &&
+      postData.name &&
+      postData.Address &&
+      postData.Phone &&
+      postData['personal email'] &&
+      postData['Emergency contact name'] &&
+      postData['Emergency Phone Number']
+    )
+  ) {
+    throw new Error('Required fields are missing.');
   }
-  return response;
+
+  if (!phoneNumberRegex.test(postData.Phone)) {
+    throw new Error('Invalid phone number.');
+  }
+
+  if (!emailRegex.test(postData['personal email'])) {
+    throw new Error('Invalid email address.');
+  }
+
+  if (!nameRegex.test(postData.name)) {
+    throw new Error('Invalid name.');
+  }
+
+  if (!addressRegex.test(postData.Address)) {
+    throw new Error('Invalid address.');
+  }
 };
 
 const createPost = async (event) => {
   const response = { statusCode: 200 };
   try {
     const body = JSON.parse(event.body);
+
+    // Validate the incoming data
+    validatePostData(body);
+
     const params = {
       TableName: process.env.DYNAMODB_TABLE_NAME,
       Item: marshall(body || {}),
@@ -64,6 +81,10 @@ const updatePost = async (event) => {
   const response = { statusCode: 200 };
   try {
     const body = JSON.parse(event.body);
+
+    // Validate the incoming data
+    validatePostData(body);
+
     const objKeys = Object.keys(body);
     const params = {
       TableName: process.env.DYNAMODB_TABLE_NAME,
@@ -105,52 +126,7 @@ const updatePost = async (event) => {
   return response;
 };
 
-const deletePost = async (event) => {
-  const response = { statusCode: 200 };
-  try {
-    const params = {
-      TableName: process.env.DYNAMODB_TABLE_NAME,
-      Key: marshall({ postId: event.pathParameters.postId }),
-    };
-    const deleteResult = await client.send(new DeleteItemCommand(params));
-    response.body = JSON.stringify({
-      message: 'Successfully deleted post.',
-      deleteResult,
-    });
-  } catch (e) {
-    console.error(e);
-    response.statusCode = 500;
-    response.body = JSON.stringify({
-      message: 'Failed to delete post.',
-      errorMsg: e.message,
-      errorStack: e.stack,
-    });
-  }
-  return response;
-};
-
-const getAllPosts = async () => {
-  const response = { statusCode: 200 };
-  try {
-    const { Items } = await client.send(
-      new ScanCommand({ TableName: process.env.DYNAMODB_TABLE_NAME })
-    );
-    response.body = JSON.stringify({
-      message: 'Successfully retrieved all posts.',
-      data: Items.map((item) => unmarshall(item)),
-      Items,
-    });
-  } catch (e) {
-    console.error(e);
-    response.statusCode = 500;
-    response.body = JSON.stringify({
-      message: 'Failed to retrieve posts.',
-      errorMsg: e.message,
-      errorStack: e.stack,
-    });
-  }
-  return response;
-};
+// ... rest of your code ...
 
 module.exports = {
   getPost,
