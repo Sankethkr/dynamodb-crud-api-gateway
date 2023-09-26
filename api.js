@@ -51,7 +51,32 @@ const validatePostData = (postData) => {
 const getPost = async (event) => {
   const response = { statusCode: 200 };
   try {
-    // Your getPost logic here...
+    const email = event.queryStringParameters.email; // Get the email from the query parameters
+
+    if (!email || !emailRegex.test(email)) {
+      throw new Error('Invalid or missing email parameter.');
+    }
+
+    const params = {
+      TableName: process.env.DYNAMODB_TABLE_NAME,
+      Key: {
+        'personal email': { S: email }, // Construct the key based on your DynamoDB item structure
+      },
+    };
+
+    const getResult = await client.send(new GetItemCommand(params));
+
+    if (!getResult.Item) {
+      throw new Error('No data found for the provided email.');
+    }
+
+    // Convert the DynamoDB item back to a JavaScript object
+    const postData = unmarshall(getResult.Item);
+
+    response.body = JSON.stringify({
+      message: 'Successfully retrieved post.',
+      postData,
+    });
   } catch (e) {
     console.error(e);
     response.statusCode = 500;
@@ -63,6 +88,7 @@ const getPost = async (event) => {
   }
   return response;
 };
+
 
 const createPost = async (event) => {
   const response = { statusCode: 200 };
