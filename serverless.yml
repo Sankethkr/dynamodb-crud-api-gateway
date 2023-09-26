@@ -5,9 +5,9 @@ provider:
   stage: dev
   region: ap-south-1
   environment:
-    DYNAMODB_TABLE_NAME: ${self:custom.postsTableName}
+    DYNAMODB_TABLE_NAME: ${self:custom.employeeTableName}
 custom:
-  postsTableName: posts-table-${self:provider.stage}
+  employeeTableName: Employee-table-${self:provider.stage}
 plugins:
   - serverless-iam-roles-per-function
 functions:
@@ -87,7 +87,7 @@ resources:
     PostsTable:
       Type: AWS::DynamoDB::Table
       Properties:
-        TableName: ${self:custom.postsTableName}
+        TableName: ${self:custom.employeeTableName}
         AttributeDefinitions:
           - AttributeName: postId
             AttributeType: S
