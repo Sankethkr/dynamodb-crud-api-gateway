@@ -48,6 +48,22 @@ const validatePostData = (postData) => {
   }
 };
 
+const getPost = async (event) => {
+  const response = { statusCode: 200 };
+  try {
+    // Your getPost logic here...
+  } catch (e) {
+    console.error(e);
+    response.statusCode = 500;
+    response.body = JSON.stringify({
+      message: 'Failed to get post.',
+      errorMsg: e.message,
+      errorStack: e.stack,
+    });
+  }
+  return response;
+};
+
 const createPost = async (event) => {
   const response = { statusCode: 200 };
   try {
@@ -132,6 +148,6 @@ module.exports = {
   getPost,
   createPost,
   updatePost,
-  deletePost,
-  getAllPosts,
+  // deletePost,
+  // getAllPosts,
 };
