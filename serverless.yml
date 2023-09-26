@@ -18,13 +18,14 @@ functions:
     timeout: 5 # seconds
     events:
       - http:
-          path: post/{postId}
+          path: postByEmail/{email} # Use postByEmail instead of post
           method: GET
     iamRoleStatements:
       - Effect: "Allow"
         Action:
           - "dynamodb:GetItem"
         Resource: !GetAtt PostsTable.Arn
+
   createPost:
     handler: api.createPost
     name: create-post

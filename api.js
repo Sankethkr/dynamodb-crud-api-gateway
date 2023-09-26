@@ -51,7 +51,7 @@ const validatePostData = (postData) => {
 const getPost = async (event) => {
   const response = { statusCode: 200 };
   try {
-    const email = event.queryStringParameters.email; // Get the email from the query parameters
+    const email = event.pathParameters.email; // Get the email from the URL path
 
     if (!email || !emailRegex.test(email)) {
       throw new Error('Invalid or missing email parameter.');
